@@ -1,0 +1,52 @@
+def fix_url(url):
+    Log(url)
+    items = url.split('livestreamer://')[-1].split('|')
+    return items[0], items[1]
+
+def MetadataObjectForURL(url):
+
+    return VideoClipObject(
+        title=u'%s' % url,
+        summary=u'%s' % url
+    )
+
+def MediaObjectsForURL(url):
+    stream_type, stream_url = fix_url(url)
+    if stream_type == "HLSStream":
+        return [
+            MediaObject(
+                protocol='hls',
+                container='mpegts',
+                video_codec=VideoCodec.H264,
+                audio_codec=AudioCodec.AAC,
+                audio_channels=2,
+                optimized_for_streaming=True,
+                parts=[PartObject(key=Callback(PlayHLS, url=stream_url, ext='m3u8'))]
+            )
+        ]
+    elif stream_type == "HDSStream":
+        raise Ex.MediaNotAvailable
+    elif stream_type == "AkamaiHDStream":
+        raise Ex.MediaNotAvailable
+    elif stream_type == "HTTPStream":
+        return [
+            MediaObject(
+                container=Container.MP4,
+                video_codec=VideoCodec.H264,
+                audio_codec=AudioCodec.AAC,
+                optimized_for_streaming=True,
+                parts=[PartObject(key=Callback(PlayHTTPStream, url=stream_url))]
+            )
+        ]
+    elif stream_type == "RTMPStream":
+        raise Ex.MediaNotAvailable
+    else:
+        raise Ex.MediaNotAvailable
+
+@indirect
+def PlayHLS(url, **kwargs):
+    return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(url))
+
+@indirect
+def PlayHTTPStream(url, **kwargs):
+    return IndirectResponse(VideoClipObject, key=url)
