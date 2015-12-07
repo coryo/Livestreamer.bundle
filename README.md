@@ -6,9 +6,9 @@ You should be able to use any url that is supported by Livestreamer.
 ### Usage:
 The list of videos is created by editing the file:
 
-`Plug-in Support\Data\com.plexapp.plugins.livestreamer\DataItems\streams.json`
+`Plug-in Support\Data\com.plexapp.plugins.livestreamer\DataItems\default.json`
 
-Example `streams.json` file:
+Example `default.json` file:
 ```json
 [
     {

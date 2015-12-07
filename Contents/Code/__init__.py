@@ -3,7 +3,7 @@ import livestreamer
 NAME = 'Livestreamer'
 PREFIX = '/video/livestreamer'
 ICON = 'icon-default.png'
-DATA_FILE = 'streams.json'
+DATA_FILE = 'default.json'
 
 def stream_type(stream):
     """ get a string for the stream type """
@@ -20,15 +20,15 @@ def stream_type(stream):
     return None
 
 @route(PREFIX+'/loadfile')
-def load_file(file=DATA_FILE):
+def load_file(file_name):
     try:
-        data = Data.Load(DATA_FILE)
+        data = Data.Load(file_name)
     except Exception:
         Log("Unable to load file.")
         return ObjectContainer()
 
     try:
-        Dict['streams'] = JSON.ObjectFromString(data)
+        Dict[file_name] = JSON.ObjectFromString(data)
     except Exception:
         Log("Unable to parse JSON.")
 
@@ -38,8 +38,13 @@ def load_file(file=DATA_FILE):
 def Start():
     ObjectContainer.title1 = NAME
 
+    if 'current_list' not in Dict:
+        Dict['current_list'] = DATA_FILE
+
     if not Data.Exists(DATA_FILE):
         Data.Save(DATA_FILE, "[]")
+        Dict['current_list'] = DATA_FILE
+
 
     load_file(DATA_FILE)
 
@@ -48,15 +53,15 @@ def MainMenu():
 
     oc = ObjectContainer(no_cache=True)
 
-    for item in Dict['streams']:
+    for item in Dict[Dict['current_list']]:
         oc.add(DirectoryObject(
             key=Callback(Qualities, url=item['url']),
             title=u'%s' % item['name']
         ))
 
     oc.add(DirectoryObject(
-        key=Callback(load_file, file=DATA_FILE),
-        title=u'%s' % "Reload streams.json"
+        key=Callback(load_file, file_name=Dict['current_list']),
+        title=u'Reload %s' % Dict['current_list']
     ))
 
     return oc
