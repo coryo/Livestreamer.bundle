@@ -41,12 +41,10 @@ def Start():
     if 'current_list' not in Dict:
         Dict['current_list'] = DATA_FILE
 
-    if not Data.Exists(DATA_FILE):
-        Data.Save(DATA_FILE, "[]")
-        Dict['current_list'] = DATA_FILE
+    if not Data.Exists(Dict['current_list']):
+        Data.Save(Dict['current_list'], "[]")
 
-
-    load_file(DATA_FILE)
+    load_file(Dict['current_list'])
 
 @handler(PREFIX, NAME, ICON)
 def MainMenu():       
