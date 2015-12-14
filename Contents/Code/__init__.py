@@ -1,9 +1,24 @@
 import livestreamer
-
 NAME = 'Livestreamer'
 PREFIX = '/video/livestreamer'
 ICON = 'icon-default.png'
-DATA_FILE = 'default.json'
+DEFAULT_PLAYLIST = 'default.json'
+
+def Start():
+    ObjectContainer.title1 = NAME
+    load_file(DEFAULT_PLAYLIST)
+
+
+@handler(PREFIX, NAME, ICON)
+def MainMenu():       
+    oc = ObjectContainer(no_cache=True)
+    for item in Dict['playlist']:
+        oc.add(DirectoryObject(key=Callback(Qualities, url=item['url']),
+            title=unicode(item['name'])))
+    oc.add(DirectoryObject(key=Callback(load_file, file_name=DEFAULT_PLAYLIST),
+                           title=u'Reload {}'.format(DEFAULT_PLAYLIST)))
+    return oc
+
 
 def stream_type(stream):
     """ get a string for the stream type """
@@ -19,50 +34,18 @@ def stream_type(stream):
         return "RTMPStream"
     return None
 
+
 @route(PREFIX+'/loadfile')
 def load_file(file_name):
     try:
-        data = Data.Load(file_name)
+        data = JSON.ObjectFromString(Resource.Load(file_name))
     except Exception:
         Log("Unable to load file.")
         return ObjectContainer()
+    else:
+        Dict['playlist'] = data
+    return ObjectContainer()    
 
-    try:
-        Dict[file_name] = JSON.ObjectFromString(data)
-    except Exception:
-        Log("Unable to parse JSON.")
-
-    return ObjectContainer()
-
-################################################################################
-def Start():
-    ObjectContainer.title1 = NAME
-
-    if 'current_list' not in Dict:
-        Dict['current_list'] = DATA_FILE
-
-    if not Data.Exists(Dict['current_list']):
-        Data.Save(Dict['current_list'], "[]")
-
-    load_file(Dict['current_list'])
-
-@handler(PREFIX, NAME, ICON)
-def MainMenu():       
-
-    oc = ObjectContainer(no_cache=True)
-
-    for item in Dict[Dict['current_list']]:
-        oc.add(DirectoryObject(
-            key=Callback(Qualities, url=item['url']),
-            title=u'%s' % item['name']
-        ))
-
-    oc.add(DirectoryObject(
-        key=Callback(load_file, file_name=Dict['current_list']),
-        title=u'Reload %s' % Dict['current_list']
-    ))
-
-    return oc
 
 @route(PREFIX+'/qualities')
 def Qualities(url):
@@ -76,12 +59,8 @@ def Qualities(url):
     except livestreamer.PluginError as err:
         Log("Livestreamer plugin error: %s" % err)
         return oc
-
     for quality in streams:
-        oc.add(VideoClipObject(
-            url="livestreamer://%s|%s" % (stream_type(streams[quality]),
-                                          streams[quality].url),
-            title=quality
-        ))
-
+        oc.add(VideoClipObject(url="livestreamer://{}|{}".format(stream_type(streams[quality]),
+                                                                 streams[quality].url),
+                               title=quality))
     return oc
