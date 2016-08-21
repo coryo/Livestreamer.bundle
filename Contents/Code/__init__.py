@@ -10,7 +10,7 @@ def Start():
 
 
 @handler(PREFIX, NAME, ICON)
-def MainMenu():       
+def MainMenu():
     oc = ObjectContainer(no_cache=True)
     for item in Dict['playlist']:
         oc.add(DirectoryObject(key=Callback(Qualities, url=item['url']),
@@ -44,7 +44,7 @@ def load_file(file_name):
         return ObjectContainer()
     else:
         Dict['playlist'] = data
-    return ObjectContainer()    
+    return ObjectContainer()
 
 
 @route(PREFIX+'/qualities')
@@ -60,7 +60,11 @@ def Qualities(url):
         Log("Livestreamer plugin error: %s" % err)
         return oc
     for quality in streams:
-        oc.add(VideoClipObject(url="livestreamer://{}|{}".format(stream_type(streams[quality]),
-                                                                 streams[quality].url),
-                               title=quality))
+        stream = "livestreamer://{}|{}".format(stream_type(streams[quality]), streams[quality].url)
+        try:
+            URLService.MetadataObjectForURL(stream)
+        except:
+            Log.Exception(u"Plex Framework error: can't handle '{}'".format(stream))
+            continue
+        oc.add(VideoClipObject(url=stream, title=quality))
     return oc

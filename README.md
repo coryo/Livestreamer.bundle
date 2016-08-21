@@ -6,7 +6,7 @@ You should be able to use any url that is supported by [Livestreamer](http://doc
 ### Usage:
 The list of videos is created by editing the file:
 
-`Livestreamer.bundle/Resources/default.json`
+`Livestreamer.bundle/Contents/Resources/default.json`
 
 Example `default.json` file:
 ```json
